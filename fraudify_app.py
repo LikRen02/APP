@@ -8,18 +8,24 @@ import pickle
 # Uncomment below line to save model if not done:
 # pickle.dump(xgb_model, open('xgboost_model.pkl', 'wb'))
 
+# Load required files
 model = pickle.load(open('xgboost_model.pkl', 'rb'))
+with open('x_train_columns.pkl', 'rb') as file:
+    feature_columns = pickle.load(file)
 
-# Function for prediction
 def predict_fraud(data):
-    # Prepare the input data (same preprocessing as training)
+    # Ensure input data matches the model's expected features
     data = pd.get_dummies(data, drop_first=True)
-    # Ensure all columns match the training data
-    all_features = X_train.columns
-    missing_cols = set(all_features) - set(data.columns)
+    
+    # Add missing columns with default value 0
+    missing_cols = set(feature_columns) - set(data.columns)
     for col in missing_cols:
         data[col] = 0
-    data = data[all_features]
+
+    # Reorder columns to match the training set
+    data = data[feature_columns]
+    
+    # Make prediction
     prediction = model.predict(data)
     return "Fraudulent" if prediction[0] == 1 else "Not Fraudulent"
 
